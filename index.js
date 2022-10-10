@@ -1,21 +1,28 @@
 const express = require('express');
 const app = express();
+const port = 3000;
 const router = express.Router();
+var path = require('path');
+const fs = require('fs');
 
 /*
 - Create new html file name home.html 
 - add <h1> tag with message "Welcome to ExpressJs Tutorial"
 - Return home.html page to client
 */
-router.get('/home', (req,res) => {
-  res.send('This is home router');
+
+router.get('/', function(req, res) {
+    res.sendFile(path.join(__dirname + '/home.html'));
 });
 
 /*
 - Return all details from user.json file to client as JSON format
 */
-router.get('/profile', (req,res) => {
-  res.send('This is profile router');
+
+router.get('/user', function(req, res) {
+    fs.readFile(__dirname + '/user.json', 'utf8', function(err, data) {
+        res.end(data);
+    });
 });
 
 /*
@@ -37,20 +44,38 @@ router.get('/profile', (req,res) => {
         message: "Password is invalid"
     }
 */
-router.get('/login', (req,res) => {
-  res.send('This is login router');
+
+router.get('/login', function(req, res) {
+    fs.readFile(__dirname + '/user.json', 'utf8', function(err, data) {
+        var user = JSON.parse(data);
+        if (user.username == req.query.username && user.password == req.query.password) {
+            res.end(JSON.stringify({
+                status: true,
+                message: "User Is valid"
+            }));
+        } else if (user.username != req.query.username) {
+            res.end(JSON.stringify({
+                status: false,
+                message: "User Name is invalid"
+            }));
+        } else if (user.password != req.query.password) {
+            res.end(JSON.stringify({
+                status: false,
+                message: "Password is invalid"
+            }));
+        }
+    });
 });
 
 /*
 - Modify /logout route to accept username as parameter and display message
     in HTML format like <b>${username} successfully logout.<b>
 */
-router.get('/logout', (req,res) => {
-  res.send('This is logout router');
+
+router.get('/logout/:username', function(req, res) {
+    res.end(`<b>${req.params.username} successfully logout.<b>`);
 });
 
 app.use('/', router);
+app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
-app.listen(process.env.port || 8081);
-
-console.log('Web Server is listening at port '+ (process.env.port || 8081));
